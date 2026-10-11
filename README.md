@@ -9,7 +9,7 @@ Here at TrevVM we try to make everything simple and easy. This Easy-to-use Linux
 
 <b>We also use this to test features that can be added sooner in codespaces.</b>
 
------
+
 ## Installation 🔑
 Make a codespaces by pressing the green code button. Then click Create codespaces on main. When you load the codespace in, type this cmd that is below in the terminal:
 ```
