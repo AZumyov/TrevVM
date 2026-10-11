@@ -17,7 +17,6 @@ curl -O https://raw.githubusercontent.com/TrevorTesch/TrevVM/main/install.sh
 chmod +x install.sh
 ./install.sh
 ```
-<b>NOTE: GO TO THE TREVM WIKI FOR INSTALLATION. WIKI SHOWCASES HOW TO INSTALL PROPERLY.</b>
 ## Q&A 📢
 When you successfully run the vm, you can install windows files. You can run .exe (ex. install fortnite, obs to stream, etc). You can ask any more Questions in discussions tab.
 
