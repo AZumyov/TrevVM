@@ -1,6 +1,6 @@
-<img src="./main.png" alt="TrevVM logo" width="120">
+<img src="images/main.png" alt="TrevVM logo" width="120">
 
-<img src="./CC_BY-NC-SA.jpg" alt="BY-NC-SA" width="60">
+<img src="images/CC_BY-NC-SA.jpg" alt="BY-NC-SA" width="60">
 
 # $\color{#0B1F4B}{\textsf{Trev}}\color{#66C7F2}{\textsf{VM}}$ 🖥 (run this in a deployed environment)
 #### PANIC KEY IS EQUAL 
