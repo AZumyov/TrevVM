@@ -1,16 +1,11 @@
-# CHANGELOG - 3.0.0
-
+# CHANGELOG - v3.0.1
+As presented, "days work."
 ## What's Changed
-* Create .gitignore by @TrevorTesch in https://github.com/TrevorTesch/TrevVM/pull/29
-* Mergery by @TrevorTesch in https://github.com/TrevorTesch/TrevVM/pull/30
-* Fix/issue 18 black white screen by @TrevorTesch in https://github.com/TrevorTesch/TrevVM/pull/31
-* 10 10 26 testro by @TrevorTesch in https://github.com/TrevorTesch/TrevVM/pull/32
-##### As presented, "days work."
+* days work by @TrevorTesch in https://github.com/TrevorTesch/TrevVM/pull/34
+* Update CHANGELOG.md by @TrevorTesch in https://github.com/TrevorTesch/TrevVM/pull/35
 
-**Full Changelog**: https://github.com/TrevorTesch/TrevVM/compare/v2.0.4...v3.0.0
 
-<hr /><em>This discussion was created from the release <a href='https://github.com/TrevorTesch/TrevVM/releases/tag/v3.0.0'>version_3v.0.0</a>.</em>
-
+**Full Changelog**: https://github.com/TrevorTesch/TrevVM/compare/v3.0.0...v3.0.1
 
 ## Help Us!
 
