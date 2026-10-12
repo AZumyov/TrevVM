@@ -1,6 +1,6 @@
-<img src="./main.png" alt="TrevVM logo" width="120">
+<img src="images/main.png" alt="TrevVM logo" width="120">
 
-<img src="./CC_BY-NC-SA.jpg" alt="BY-NC-SA" width="60">
+<img src="images/CC_BY-NC-SA.jpg" alt="BY-NC-SA" width="60">
 
 # $\color{#0B1F4B}{\textsf{Trev}}\color{#66C7F2}{\textsf{VM}}$ 🖥 (run this in a deployed environment)
 #### PANIC KEY IS EQUAL 
@@ -9,7 +9,7 @@ Here at TrevVM we try to make everything simple and easy. This Easy-to-use Linux
 
 <b>We also use this to test features that can be added sooner in codespaces.</b>
 
------
+
 ## Installation 🔑
 Make a codespaces by pressing the green code button. Then click Create codespaces on main. When you load the codespace in, type this cmd that is below in the terminal:
 ```
@@ -17,7 +17,6 @@ curl -O https://raw.githubusercontent.com/TrevorTesch/TrevVM/main/install.sh
 chmod +x install.sh
 ./install.sh
 ```
-<b>NOTE: GO TO THE TREVM WIKI FOR INSTALLATION. WIKI SHOWCASES HOW TO INSTALL PROPERLY.</b>
 ## Q&A 📢
 When you successfully run the vm, you can install windows files. You can run .exe (ex. install fortnite, obs to stream, etc). You can ask any more Questions in discussions tab.
 

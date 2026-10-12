@@ -1,6 +1,6 @@
 FROM ghcr.io/linuxserver/baseimage-kasmvnc:ubuntujammy
 
-# set version label
+# set version label, precise
 ARG BUILD_DATE
 ARG VERSION
 LABEL build_version="[Mollomm1 Mod] Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
@@ -8,7 +8,7 @@ LABEL maintainer="mollomm1"
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
-# prevent Ubuntu's firefoxs stub from being installed
+# prevent Ubuntu's firefoxs stub from being installed, also copying files.
 COPY /root/etc/apt/preferences.d/firefox-no-snap /etc/apt/preferences.d/firefox-no-snap
 
 COPY options.json /
@@ -38,7 +38,7 @@ RUN \
     /var/tmp/* \
     /tmp/*
   
-# ports and volumes
+# ports and volumes, changes this before setup (optional)
 EXPOSE 3000
 VOLUME /config
 
