@@ -1,7 +1,6 @@
 # Contributing😄
 
-Contributions are welcome when they improve reliability, documentation, accessibility, or authorized use cases.
-
+Contributions are welcome when they improve reliability, documentation, or accessibility.
 ## Before contributing🤔
 
 1. Read the repository README, `SECURITY.md`, and `LICENSE`.
