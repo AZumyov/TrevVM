@@ -11,8 +11,7 @@ Contributions are welcome when they improve reliability, documentation, accessib
 
 ## Documentation changes✍️
 
-Prefer clear, reproducible instructions. Identify the affected file, host assumptions, required privileges, network dependencies, and rollback steps. Documentation must not encourage bypassing access controls or violating acceptable-use policies.
-
+Prefer clear, reproducible instructions. Identify the affected file, host assumptions, required privileges, network dependencies, and rollback steps.
 ## Pull requests🫵
 
 A useful pull request includes:
