@@ -26,14 +26,14 @@ The following behavior is not tolerated:
 - Publishing someone else’s private information without permission.
 - Sexualized language or unwelcome sexual attention.
 - Encouraging or documenting unauthorized access, credential theft, malware, evasion of security controls, or disruption of services.
-- Submitting code or instructions intended to circumvent authorization, monitoring, or acceptable-use controls without permission.
+- Submitting code or instructions intended to circumvent monitoring, or acceptable-use controls without permission.
 - Any other conduct that would reasonably be considered inappropriate or unprofessional in a public technical community.
 
 ## Scope and Responsibilities🙀
 
 This Code of Conduct applies in project spaces, including issues, pull requests, discussions, documentation, code reviews, chat, and project-related events. Maintainers are responsible for clarifying and enforcing these standards and may remove, edit, or reject contributions that violate them.
 
-Contributors are responsible for ensuring that their submissions are lawful, safe, and appropriately documented. Do not include credentials, private data, or instructions that enable unauthorized activity in issues, pull requests, or repository files.
+Contributors are responsible for ensuring that their submissions are lawful, safe, and appropriately documented. Do not include credentials, and/or private data in issues, pull requests, or repository files.
 
 ## Reporting Issues✍️
 
