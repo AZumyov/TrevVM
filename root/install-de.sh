@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from textual.app import App, ComposeResult
 from textual.screen import Screen
 from textual.containers import Horizontal, Vertical
