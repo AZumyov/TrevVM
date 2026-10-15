@@ -8,7 +8,7 @@ LABEL maintainer="mollomm1"
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
-# prevent Ubuntu's firefoxs stub from being installed, also copying files.
+# prevent Ubuntu's firefox stub from being installed, also copying files.
 COPY /root/etc/apt/preferences.d/firefox-no-snap /etc/apt/preferences.d/firefox-no-snap
 
 COPY options.json /
@@ -17,6 +17,8 @@ COPY /root/ /
 
 RUN \
   echo "**** install packages ****" && \
+  apt-get update && \
+  apt-get install -y --no-install-recommends software-properties-common && \
   add-apt-repository -y ppa:mozillateam/ppa && \
   rm -f /etc/apt/sources.list.d/nodesource.list && \
   apt-get update && \
@@ -41,4 +43,3 @@ RUN \
 # ports and volumes, changes this before setup (optional)
 EXPOSE 3000
 VOLUME /config
-
