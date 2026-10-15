@@ -8,17 +8,17 @@ LABEL maintainer="mollomm1"
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
-# Copy base files first; explicit copies below take precedence.
+# Copy the supporting files first.
 COPY root/ /
 
-# Prevent Ubuntu's Firefox snap stub from being installed.
+# Explicit copies come after the broad copy so they take precedence.
 COPY root/etc/apt/preferences.d/firefox-no-snap /etc/apt/preferences.d/firefox-no-snap
-
-# These must be the Bash installer and the selected options.
-COPY install-de.sh /install-de.sh
+COPY root/install-de.sh /install-de.sh
 COPY options.json /options.json
 
 RUN \
+  echo "**** installer first lines ****" && \
+  head -n 5 /install-de.sh && \
   echo "**** install packages ****" && \
   add-apt-repository -y ppa:mozillateam/ppa && \
   rm -f /etc/apt/sources.list.d/nodesource.list && \
