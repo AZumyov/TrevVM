@@ -1,6 +1,6 @@
 FROM ghcr.io/linuxserver/baseimage-kasmvnc:ubuntujammy
 
-# set version label
+# Set version label
 ARG BUILD_DATE
 ARG VERSION
 LABEL build_version="[Mollomm1 Mod] Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
@@ -8,12 +8,15 @@ LABEL maintainer="mollomm1"
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
-# prevent Ubuntu's firefoxs stub from being installed
-COPY /root/etc/apt/preferences.d/firefox-no-snap /etc/apt/preferences.d/firefox-no-snap
+# Copy base files first; explicit copies below take precedence.
+COPY root/ /
 
-COPY options.json /
+# Prevent Ubuntu's Firefox snap stub from being installed.
+COPY root/etc/apt/preferences.d/firefox-no-snap /etc/apt/preferences.d/firefox-no-snap
 
-COPY /root/ /
+# These must be the Bash installer and the selected options.
+COPY install-de.sh /install-de.sh
+COPY options.json /options.json
 
 RUN \
   echo "**** install packages ****" && \
@@ -22,7 +25,7 @@ RUN \
   apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y firefox jq wget && \
   chmod +x /install-de.sh && \
-  /install-de.sh
+  bash /install-de.sh
 
 RUN \
   chmod +x /installapps.sh && \
@@ -37,7 +40,7 @@ RUN \
     /var/lib/apt/lists/* \
     /var/tmp/* \
     /tmp/*
-  
-# ports and volumes
+
+# Ports and volumes
 EXPOSE 3000
 VOLUME /config
