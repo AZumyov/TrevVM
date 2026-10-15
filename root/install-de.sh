@@ -11,14 +11,11 @@ def savejson(json):
 
 
 def normalize_desktop(value):
-    if value is None:
-        return "XFCE4 (Lightweight)"
     valid = {
         "KDE Plasma (Heavy)",
         "XFCE4 (Lightweight)",
         "I3 (Very Lightweight)",
         "GNOME 42 (Very Heavy)",
-        "Cinnamon",
         "Cinnamon (Average)",
         "LXQT (Recommended)",
     }
