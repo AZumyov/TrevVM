@@ -18,14 +18,13 @@ COPY /root/ /
 RUN \
   echo "**** install packages ****" && \
   apt-get update && \
-  apt-get install -y --no-install-recommends software-properties-common ca-certificates gnupg && \
+  apt-get install -y --no-install-recommends software-properties-common ca-certificates gnupg python3 python3-pip && \
+  pip3 install textual && \
   add-apt-repository -y ppa:mozillateam/ppa && \
   rm -f /etc/apt/sources.list.d/nodesource.list && \
   apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y firefox jq wget && \
-  if [ -f /install-de.sh ]; then chmod +x /install-de.sh && /install-de.sh; fi
-  chmod +x /install-de.sh && \
-  /install-de.sh
+  python3 /install-de.sh
 
 RUN \
   chmod +x /installapps.sh && \
