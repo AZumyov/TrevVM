@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 apt update
 if jq ".DE" "/options.json" | grep -q "KDE Plasma (Heavy)"; then
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y dolphin \
