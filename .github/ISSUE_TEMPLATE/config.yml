@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: TrevVM Discussions
+    url: https://github.com/TrevorTesch/TrevVM/discussions
+    about: Before reporting an issue, please open a discussions to get help from others.
