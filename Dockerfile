@@ -8,17 +8,15 @@ LABEL maintainer="mollomm1"
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
-# Copy the supporting files first.
+# Copy supporting files first.
 COPY root/ /
 
-# Explicit copies come after the broad copy so they take precedence.
+# Explicit copies come after the broad copy so these versions are used.
 COPY root/etc/apt/preferences.d/firefox-no-snap /etc/apt/preferences.d/firefox-no-snap
 COPY root/install-de.sh /install-de.sh
 COPY options.json /options.json
 
 RUN \
-  echo "**** installer first lines ****" && \
-  head -n 5 /install-de.sh && \
   echo "**** install packages ****" && \
   add-apt-repository -y ppa:mozillateam/ppa && \
   rm -f /etc/apt/sources.list.d/nodesource.list && \
