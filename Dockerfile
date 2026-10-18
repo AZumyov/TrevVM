@@ -7,8 +7,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 LABEL build_version="[Mollomm1 Mod] Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}" \
       maintainer="mollomm1"
 
-# Copies the contents of root/ into the image filesystem.
 COPY root/ /
+COPY root/etc/apt/preferences.d/firefox-no-snap /etc/apt/preferences.d/firefox-no-snap
+COPY root/install-de.sh /install-de.sh
 COPY options.json /options.json
 
 RUN set -eux; \
@@ -18,8 +19,11 @@ RUN set -eux; \
     add-apt-repository -y ppa:mozillateam/ppa; \
     apt-get update; \
     apt-get install --no-install-recommends -y firefox jq wget; \
-    chmod +x /installapps.sh; \
+    echo "---- first lines of copied install-de.sh ----"; \
+    sed -n '1,5p' /install-de.sh; \
+    bash -n /install-de.sh; \
     bash /install-de.sh; \
+    chmod +x /installapps.sh; \
     /installapps.sh; \
     rm -f /installapps.sh; \
     apt-get autoclean; \
