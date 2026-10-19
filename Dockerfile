@@ -1,44 +1,38 @@
 FROM ghcr.io/linuxserver/baseimage-kasmvnc:ubuntujammy
 
-# set version label, precise
 ARG BUILD_DATE
 ARG VERSION
-LABEL build_version="[Mollomm1 Mod] Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
-LABEL maintainer="mollomm1"
+ARG DEBIAN_FRONTEND=noninteractive
 
-ARG DEBIAN_FRONTEND="noninteractive"
+LABEL build_version="[Mollomm1 Mod] Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}" \
+      maintainer="mollomm1"
 
-# prevent Ubuntu's firefoxs stub from being installed, also copying files.
-COPY /root/etc/apt/preferences.d/firefox-no-snap /etc/apt/preferences.d/firefox-no-snap
+COPY root/ /
+COPY root/etc/apt/preferences.d/firefox-no-snap /etc/apt/preferences.d/firefox-no-snap
+COPY root/install-de.sh /install-de.sh
+COPY options.json /options.json
 
-COPY options.json /
+RUN set -eux; \
+    rm -f /etc/apt/sources.list.d/nodesource.list; \
+    apt-get update; \
+    apt-get install --no-install-recommends -y software-properties-common; \
+    add-apt-repository -y ppa:mozillateam/ppa; \
+    apt-get update; \
+    apt-get install --no-install-recommends -y firefox jq wget; \
+    echo "---- first lines of copied install-de.sh ----"; \
+    sed -n '1,5p' /install-de.sh; \
+    bash -n /install-de.sh; \
+    bash /install-de.sh; \
+    chmod +x /installapps.sh; \
+    /installapps.sh; \
+    rm -f /installapps.sh; \
+    apt-get autoclean; \
+    apt-get clean; \
+    rm -rf \
+      /config/.cache \
+      /var/lib/apt/lists/* \
+      /var/tmp/* \
+      /tmp/*
 
-COPY /root/ /
-
-RUN \
-  echo "**** install packages ****" && \
-  add-apt-repository -y ppa:mozillateam/ppa && \
-  rm -f /etc/apt/sources.list.d/nodesource.list && \
-  apt-get update && \
-  DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y firefox jq wget && \
-  chmod +x /install-de.sh && \
-  /install-de.sh
-
-RUN \
-  chmod +x /installapps.sh && \
-  /installapps.sh && \
-  rm /installapps.sh
-
-RUN \
-  echo "**** cleanup ****" && \
-  apt-get autoclean && \
-  rm -rf \
-    /config/.cache \
-    /var/lib/apt/lists/* \
-    /var/tmp/* \
-    /tmp/*
-  
-# ports and volumes, changes this before setup (optional)
 EXPOSE 3000
 VOLUME /config
-

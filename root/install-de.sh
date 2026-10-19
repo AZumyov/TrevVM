@@ -1,122 +1,112 @@
-from textual.app import App, ComposeResult
-from textual.screen import Screen
-from textual.containers import Horizontal, Vertical
-from textual.widgets import Footer, Header, SelectionList, Label, Button, Markdown, Select, Static, Switch
+#!/usr/bin/env bash
+apt update
+if jq ".DE" "/options.json" | grep -q "KDE Plasma (Heavy)"; then
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y dolphin \
+    gwenview \
+    kde-config-gtk-style \
+    kdialog \
+    kfind \
+    khotkeys \
+    kio-extras \
+    knewstuff-dialog \
+    konsole \
+    ksystemstats \
+    kwin-addons \
+    kwin-x11 \
+    kwrite \
+    plasma-desktop \
+    plasma-workspace \
+    qml-module-qt-labs-platform \
+    systemsettings
+    sed -i 's/applications:org.kde.discover.desktop,/applications:org.kde.konsole.desktop,/g' /usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml
+    cp /startwm-kde.sh /defaults/startwm.sh
+fi
+if jq ".DE" "/options.json" | grep -q "XFCE4 (Lightweight)"; then
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y firefox \
+    mousepad \
+    xfce4-terminal \
+    xfce4 \
+    xubuntu-default-settings \
+    xubuntu-icon-theme
+    rm -f /etc/xdg/autostart/xscreensaver.desktop
+    cp /startwm-xfce.sh /defaults/startwm.sh
+fi
+if jq ".DE" "/options.json" | grep -q "I3 (Very Lightweight)"; then
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends firefox \
+    i3 \
+    i3-wm \
+    stterm
+    update-alternatives --set x-terminal-emulator /usr/bin/st
+    cp /startwm-i3.sh /defaults/startwm.sh
+fi
+if jq ".DE" "/options.json" | grep -q "GNOME 42 (Very Heavy)"; then
+    # most of this is taken from udroid (https://github.com/RandomCoderOrg/jammy-gnome/)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y firefox
+    apt-get install -y gnome-shell \
+    gnome-shell-* \
+    dbus-x11 \
+    gnome-terminal \
+    gnome-accessibility-themes \
+    gnome-calculator \
+    gnome-control-center* \
+    gnome-desktop3-data \
+    gnome-initial-setup \
+    gnome-menus \
+    gnome-text-editor \
+    gnome-themes-extra* \
+    gnome-user-docs \
+    gnome-video-effects \
+    gnome-tweaks \
+    gnome-software \
+    language-pack-en-base \
+    mesa-utils \
+    xterm \
+    yaru-*
+    
+    # load dconf settings
+    if [ -f /jammy.dconf.conf ]; then
+        # export dbus session address
+        export $(dbus-launch)
 
-### JSON Exporter ###
+        dconf load / < /jammy.dconf.conf || {
+            echo -e "\t: dconf load failed.."
+        }
+    else
+        echo -e "\t: dconf file not found.."
+    fi
 
-def savejson(json):
-    with open('options.json', 'w', encoding='utf-8') as f:
-        f.write(str(json).replace("'", '"').replace("True", "true").replace("False", "false"))
+    for file in $(find /usr -type f -iname "*login1*"); do 
+        mv -v $file "$file.back"
+    done
 
+    echo "sudo chmod u+s /usr/lib/dbus-1.0/dbus-daemon-launch-helper" >> ~/.bashrc
+    echo "sudo chmod u+s /usr/lib/dbus-1.0/dbus-daemon-launch-helper" >> /config/.bashrc
 
-def normalize_desktop(value):
-    if value is None:
-        return "XFCE4 (Lightweight)"
-    valid = {
-        "KDE Plasma (Heavy)",
-        "XFCE4 (Lightweight)",
-        "I3 (Very Lightweight)",
-        "GNOME 42 (Very Heavy)",
-        "Cinnamon",
-        "Cinnamon (Average)",
-        "LXQT (Recommended)",
-    }
-    return value if value in valid else "XFCE4 (Lightweight)"
+    mv -v /usr/share/applications/gnome-sound-panel.desktop /usr/share/applications/gnome-sound-panel.desktop.back
 
-#####################
+    echo "export XDG_CURRENT_DESKTOP=GNOME" >> ~/.bashrc
+    echo "export XDG_CURRENT_DESKTOP=GNOME" >> /config/.bashrc
 
-Head="""
-# TrevVM Installer
-
-> TrevVM (Powered by Linux - Codespaces)
-
-TrevVM is a Virtual Machine that...
-* Runs entirely in a web browser
-* Is unblocked
-* Has Windows app support
-* Has audio support
-* Can Bypass School Network
-"""
-InstallHead="""
-# TrevVM Installer
-"""     
-
-LINES = ["KDE Plasma (Heavy)", "XFCE4 (Lightweight)", "I3 (Very Lightweight)", "GNOME 42 (Very Heavy)", "Cinnamon (Average)", "LXQT (Recommended)"]
-
-class InstallScreen(Screen):
-    CSS_PATH = "installer.tcss"
-
-    def compose(self) -> ComposeResult:
-        yield Header()
-        yield Markdown(InstallHead)
-        yield Horizontal (
-        Vertical (
-         Label("Default Apps (get all of them)"),
-         SelectionList[int]( 
-            ("Wine", 0, True),
-            ("Chrome", 1, True),
-            ("Xarchiver", 2, True),
-            ("Discord", 3, True),
-            ("Steam", 4, True),
-            ("Minecraft", 5, True),
-            id="defaultapps"
-        ),),
-        Vertical (
-         Label("Programming"),
-         SelectionList[int]( 
-            ("OpenJDK 8 (jre)", 0),
-            ("OpenJDK 17 (jre)", 1),
-            ("VSCodium", 2),
-            id="programming"
-        ),),
-        Vertical (
-         Label("Apps"),
-         SelectionList[int]( 
-            ("VLC", 0),
-            ("LibreOffice", 1),
-            ("Synaptic", 2),
-            ("AQemu (VMs)", 3),
-            ("TLauncher", 4),
-            id="apps"
-        ),),
-        )
-
-        yield Vertical (
-         Horizontal(
-            Label("\nDesktop Environement :"),
-            Select(id="de", value="KDE Plasma (Heavy)", options=((line, line) for line in LINES)),
-        ),)
-        yield Horizontal (
-            Button.error("Back", id="back"),
-            Button.warning("Install NOW", id="in"),
-        )
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "back":
-            app.pop_screen()
-        if event.button.id == "in":
-            selected_de = normalize_desktop(self.query_one("#de").value)
-            data = {"defaultapps": self.query_one("#defaultapps").selected, "programming": self.query_one("#programming").selected, "apps": self.query_one("#apps").selected, "enablekvm": True, "DE": selected_de}
-            savejson(data)
-            app.exit()
-
-class InstallApp(App):
-    CSS_PATH = "installer.tcss"
-
-    def compose(self) -> ComposeResult:
-        yield Header()
-        yield Markdown(Head)
-        
-        yield Vertical (
-            Button.success("Install", id="install"),
-        )
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "cancel":
-            print("")
-        if event.button.id == "install":
-            self.push_screen(InstallScreen())
-            
-if __name__ == "__main__":
-    app = InstallApp()
-    app.run()
-
+    apt-get remove -y \
+        gnome-power-manager \
+        gnome-bluetooth \
+        gnome-software \
+        gpaste \
+        hijra-applet gnome-shell-extension-hijra \
+        mailnag gnome-shell-mailnag \
+        gnome-shell-pomodoro gnome-shell-pomodoro-data
+    
+    cp /startwm-gnome.sh /defaults/startwm.sh
+fi
+if jq ".DE" "/options.json" | grep -q "Cinnamon"; then
+    DEBIAN_FRONTEND=noninteractive apt-get install -y firefox \
+    cinnamon
+    cp /startwm-cinnamon.sh /defaults/startwm.sh
+fi
+if jq ".DE" "/options.json" | grep -q "LXQT"; then
+    DEBIAN_FRONTEND=noninteractive apt-get install -y firefox
+    apt-get install -y lxqt
+    cp /startwm-lxqt.sh /defaults/startwm.sh
+fi
+chmod +x /defaults/startwm.sh
+rm -f /startwm-kde.sh /startwm-i3.sh /startwm-xfce.sh
