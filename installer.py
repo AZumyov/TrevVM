@@ -18,7 +18,7 @@ Head="""
 
 TrevVM is a Virtual Machine that...
 * Linux-Ran software
-* KasmVNC Software
+* Gaming support
 * Has Windows app support
 * Has audio support
 * Can be ran on a deployed environment
@@ -37,7 +37,7 @@ class InstallScreen(Screen):
         yield Markdown(InstallHead)
         yield Horizontal (
         Vertical (
-         Label("Default Apps (get all of them)"),
+         Label("Default Apps"),
          SelectionList[int]( 
             ("Wine", 0, True),
             ("Chrome", 1, True),
