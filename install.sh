@@ -2,7 +2,7 @@ set -e
 
 git clone https://github.com/TrevorTesch/TrevVM
 cd TrevVM
-pip install textual
+python3 -m pip install -r requirements.txt
 sleep 2
 python3 installer.py
 docker build -t trevvm . --no-cache
