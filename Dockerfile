@@ -10,7 +10,6 @@ LABEL build_version="[Mollomm1 Mod] Linuxserver.io version:- ${VERSION} Build-da
 COPY root/ /
 COPY root/etc/apt/preferences.d/firefox-no-snap /etc/apt/preferences.d/firefox-no-snap
 COPY root/install-de.sh /install-de.sh
-COPY options.json /options.json
 
 RUN set -eux; \
     rm -f /etc/apt/sources.list.d/nodesource.list; \
