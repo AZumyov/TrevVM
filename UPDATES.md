@@ -1,4 +1,4 @@
-# How
+# How to update in codespaces
 
 You can update by running the following in your terminal.
 ```
