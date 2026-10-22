@@ -21,7 +21,7 @@ TrevVM is a Virtual Machine that...
 * Gaming support
 * Has Windows app support
 * Has audio support
-* Can be ran on a deployed environment
+* Can be ran on a deployed environment (with sufficent requriements)
 """
 InstallHead="""
 # TrevVM Installer
@@ -74,7 +74,7 @@ class InstallScreen(Screen):
         ),)
         yield Horizontal (
             Button.error("Back", id="back"),
-            Button.warning("Install NOW", id="in"),
+            Button.warning("Install", id="in"),
         )
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "back":
