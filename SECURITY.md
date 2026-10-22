@@ -112,4 +112,4 @@ We are committed to responding respectfully, protecting good-faith reporters, an
 
 ---
 
-**Last updated:** 2026-10-07
+**Last updated:** 2026-10-22
