@@ -45,13 +45,7 @@ python3 -m pip install -r requirements.txt
 #### I'm sure some of y'all can get confused from all the stuff that works here, we will try to explain and have easy access on our page wiki to make things easier. It can make things get clearer for any questions.
 
 > ### NOTE: These files are subject to changes, so if you still have any questions, go to discussions or issues.
-
-## Fork ♾️
-
-Yes, this is based of a repo called <a href="https://github.com/Blobby-Boi/BlobeVM">BlobeVM</a>. But it isn't actively being edited, or maintained anymore. It's most likely a sitting <b>archive</b> almost. This will have all the good features and be active to the public for future code and development. 
-
-As school progress, so as blockers like GoGuardian, or Lightspeed. Those to name a few, are very good at what they do. Luckily the fact that this is very active, new tactics can be patched and fixed.
-
+-----
 <i>Quick links that are "useful"</i>
 - <a href="https://github.com/TrevorTesch/TrevVM/wiki/Main-Page%F0%9F%96%A7">Wiki</a>
 - <a href="https://github.com/TrevorTesch/TrevVM/fork">Fork - You need it to have a save state if you wanna make your own changes.</a>

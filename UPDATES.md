@@ -1,11 +1,11 @@
-# How
+# How to update in codespaces
 
 You can update by running the following in your terminal.
 ```
 git pull
 ```
 ## Already installed
-If you already installed TrevVM and dont know how to start it, you can run this.
+If you already installed TrevVM and dont know how to start it, you can run this. (ignore the plus)
 ```diff
 + docker start TrevVM
 ```
