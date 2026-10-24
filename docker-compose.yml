@@ -1,0 +1,25 @@
+services:
+  trevvm:
+    build:
+      context: .
+      args:
+        VERSION: local
+    image: trevvm:latest
+    container_name: TrevVM
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: "Etc/UTC"
+      SUBFOLDER: "/"
+      TITLE: "TrevVM"
+    ports:
+      - "3000:3000"
+    shm_size: "2gb"
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - ./Save:/config
+    restart: unless-stopped
+    # Hardware acceleration on Linux hosts that expose /dev/kvm:
+    # devices:
+    #   - /dev/kvm:/dev/kvm

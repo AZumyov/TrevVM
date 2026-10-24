@@ -1,112 +1,177 @@
 #!/usr/bin/env bash
-apt update
-if jq ".DE" "/options.json" | grep -q "KDE Plasma (Heavy)"; then
-    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y dolphin \
-    gwenview \
-    kde-config-gtk-style \
-    kdialog \
-    kfind \
-    khotkeys \
-    kio-extras \
-    knewstuff-dialog \
-    konsole \
-    ksystemstats \
-    kwin-addons \
-    kwin-x11 \
-    kwrite \
-    plasma-desktop \
-    plasma-workspace \
-    qml-module-qt-labs-platform \
-    systemsettings
-    sed -i 's/applications:org.kde.discover.desktop,/applications:org.kde.konsole.desktop,/g' /usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml
-    cp /startwm-kde.sh /defaults/startwm.sh
-fi
-if jq ".DE" "/options.json" | grep -q "XFCE4 (Lightweight)"; then
-    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y firefox \
-    mousepad \
-    xfce4-terminal \
-    xfce4 \
-    xubuntu-default-settings \
-    xubuntu-icon-theme
-    rm -f /etc/xdg/autostart/xscreensaver.desktop
-    cp /startwm-xfce.sh /defaults/startwm.sh
-fi
-if jq ".DE" "/options.json" | grep -q "I3 (Very Lightweight)"; then
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends firefox \
-    i3 \
-    i3-wm \
-    stterm
-    update-alternatives --set x-terminal-emulator /usr/bin/st
-    cp /startwm-i3.sh /defaults/startwm.sh
-fi
-if jq ".DE" "/options.json" | grep -q "GNOME 42 (Very Heavy)"; then
-    # most of this is taken from udroid (https://github.com/RandomCoderOrg/jammy-gnome/)
-    DEBIAN_FRONTEND=noninteractive apt-get install -y firefox
-    apt-get install -y gnome-shell \
-    gnome-shell-* \
-    dbus-x11 \
-    gnome-terminal \
-    gnome-accessibility-themes \
-    gnome-calculator \
-    gnome-control-center* \
-    gnome-desktop3-data \
-    gnome-initial-setup \
-    gnome-menus \
-    gnome-text-editor \
-    gnome-themes-extra* \
-    gnome-user-docs \
-    gnome-video-effects \
-    gnome-tweaks \
-    gnome-software \
-    language-pack-en-base \
-    mesa-utils \
-    xterm \
-    yaru-*
-    
-    # load dconf settings
-    if [ -f /jammy.dconf.conf ]; then
-        # export dbus session address
-        export $(dbus-launch)
+#
+# Configure the desktop environment inside the image.
+# Reads /options.json (written by installer.py) and installs exactly one DE.
 
-        dconf load / < /jammy.dconf.conf || {
-            echo -e "\t: dconf load failed.."
-        }
-    else
-        echo -e "\t: dconf file not found.."
+set -Eeuo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+OPTIONS_FILE=/options.json
+STARTWM_DIR=/defaults
+APT_OPTS=(-y --no-install-recommends -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold)
+
+log()  { printf '[trevvm-de] %s\n' "$*"; }
+warn() { printf '[trevvm-de] warning: %s\n' "$*" >&2; }
+
+apt_update() {
+    local attempt
+    for attempt in 1 2 3; do
+        if apt-get update -qq; then
+            return 0
+        fi
+        warn "apt-get update failed (attempt ${attempt}/3)"
+        sleep $((attempt * 2))
+    done
+    return 1
+}
+
+apt_install() {
+    local attempt
+    for attempt in 1 2; do
+        if apt-get install "${APT_OPTS[@]}" "$@"; then
+            return 0
+        fi
+        warn "apt-get install failed (attempt ${attempt}/2): $*"
+        apt-get -f install -y -qq || true
+        sleep 2
+    done
+    return 1
+}
+
+normalize_de() {
+    case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
+        *cinnamon*)        printf 'cinnamon' ;;
+        *xfce*)            printf 'xfce' ;;
+        *lxqt*)            printf 'lxqt' ;;
+        *kde*|*plasma*)    printf 'kde' ;;
+        *gnome*)           printf 'gnome' ;;
+        *i3*)              printf 'i3' ;;
+        *)                 printf '' ;;
+    esac
+}
+
+install_startwm() {
+    local script="/startwm-$1.sh"
+    if [ ! -f "$script" ]; then
+        warn "missing $script"
+        return 1
+    fi
+    install -m 0755 "$script" "$STARTWM_DIR/startwm.sh"
+    log "session: $script"
+}
+
+rc_append() {
+    local line="$1" file
+    for file in "${HOME}/.bashrc" /config/.bashrc; do
+        [ -e "$file" ] || touch "$file" 2>/dev/null || continue
+        grep -qxF -- "$line" "$file" 2>/dev/null || printf '%s\n' "$line" >>"$file"
+    done
+}
+
+install_kde() {
+    apt_install dolphin gwenview kde-config-gtk-style kdialog kfind khotkeys \
+        kio-extras knewstuff-dialog konsole ksystemstats kwin-addons kwin-x11 \
+        kwrite plasma-desktop plasma-workspace qml-module-qt-labs-platform systemsettings
+    local taskbar=/usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml
+    if [ -f "$taskbar" ]; then
+        sed -i 's/applications:org.kde.discover.desktop,/applications:org.kde.konsole.desktop,/g' "$taskbar"
+    fi
+    install_startwm kde
+}
+
+install_xfce() {
+    apt_install firefox mousepad xfce4-terminal xfce4 xubuntu-default-settings xubuntu-icon-theme
+    rm -f /etc/xdg/autostart/xscreensaver.desktop
+    install_startwm xfce
+}
+
+install_i3() {
+    apt_install firefox i3 i3-wm stterm
+    if [ -x /usr/bin/st ]; then
+        update-alternatives --set x-terminal-emulator /usr/bin/st || warn "could not set st as the terminal"
+    fi
+    install_startwm i3
+}
+
+install_gnome() {
+    apt_install firefox gnome-shell gnome-shell-common gnome-shell-extensions gnome-session \
+        gnome-terminal gnome-control-center gnome-tweaks gnome-text-editor gnome-calculator \
+        gnome-menus gnome-accessibility-themes gnome-themes-extra gnome-user-docs \
+        gnome-video-effects yaru-theme-gtk yaru-theme-icon yaru-theme-sound \
+        language-pack-en-base mesa-utils xterm dbus-x11 dconf-cli
+
+    if [ -f /jammy.dconf.conf ]; then
+        if command -v dbus-launch >/dev/null 2>&1; then
+            eval "$(dbus-launch --sh-syntax)"
+        fi
+        dconf load / </jammy.dconf.conf || warn "dconf load failed"
     fi
 
-    for file in $(find /usr -type f -iname "*login1*"); do 
-        mv -v $file "$file.back"
-    done
+    # GNOME's login1 integration does not work in this container.
+    while IFS= read -r -d '' file; do
+        mv "$file" "$file.back" 2>/dev/null || true
+    done < <(find /usr -type f -iname '*login1*' -print0 2>/dev/null)
 
-    echo "sudo chmod u+s /usr/lib/dbus-1.0/dbus-daemon-launch-helper" >> ~/.bashrc
-    echo "sudo chmod u+s /usr/lib/dbus-1.0/dbus-daemon-launch-helper" >> /config/.bashrc
+    rc_append 'sudo chmod u+s /usr/lib/dbus-1.0/dbus-daemon-launch-helper'
+    rc_append 'export XDG_CURRENT_DESKTOP=GNOME'
 
-    mv -v /usr/share/applications/gnome-sound-panel.desktop /usr/share/applications/gnome-sound-panel.desktop.back
+    if [ -f /usr/share/applications/gnome-sound-panel.desktop ]; then
+        mv /usr/share/applications/gnome-sound-panel.desktop \
+           /usr/share/applications/gnome-sound-panel.desktop.back
+    fi
 
-    echo "export XDG_CURRENT_DESKTOP=GNOME" >> ~/.bashrc
-    echo "export XDG_CURRENT_DESKTOP=GNOME" >> /config/.bashrc
+    apt-get remove -y gnome-power-manager gnome-bluetooth gpaste mailnag \
+        gnome-shell-mailnag gnome-shell-pomodoro gnome-shell-pomodoro-data >/dev/null 2>&1 || true
 
-    apt-get remove -y \
-        gnome-power-manager \
-        gnome-bluetooth \
-        gnome-software \
-        gpaste \
-        hijra-applet gnome-shell-extension-hijra \
-        mailnag gnome-shell-mailnag \
-        gnome-shell-pomodoro gnome-shell-pomodoro-data
-    
-    cp /startwm-gnome.sh /defaults/startwm.sh
-fi
-if jq ".DE" "/options.json" | grep -q "Cinnamon"; then
-    DEBIAN_FRONTEND=noninteractive apt-get install -y firefox \
-    cinnamon
-    cp /startwm-cinnamon.sh /defaults/startwm.sh
-fi
-if jq ".DE" "/options.json" | grep -q "LXQT"; then
-    DEBIAN_FRONTEND=noninteractive apt-get install -y firefox
-    apt-get install -y lxqt
-    cp /startwm-lxqt.sh /defaults/startwm.sh
-fi
-chmod +x /defaults/startwm.sh
-rm -f /startwm-kde.sh /startwm-i3.sh /startwm-xfce.sh
+    install_startwm gnome
+}
+
+install_cinnamon() {
+    apt_install firefox cinnamon
+    install_startwm cinnamon
+}
+
+install_lxqt() {
+    apt_install firefox lxqt
+    install_startwm lxqt
+}
+
+main() {
+    if [ ! -r "$OPTIONS_FILE" ]; then
+        printf 'error: %s is missing\n' "$OPTIONS_FILE" >&2
+        exit 1
+    fi
+
+    local raw_de de
+    raw_de="$(jq -r '.DE // ""' "$OPTIONS_FILE" 2>/dev/null || true)"
+    de="$(normalize_de "$raw_de")"
+    if [ -z "$de" ]; then
+        warn "unknown desktop '${raw_de:-<empty>}', using cinnamon"
+        de="cinnamon"
+    fi
+    log "desktop: $de"
+
+    apt_update
+
+    case "$de" in
+        kde)      install_kde ;;
+        xfce)     install_xfce ;;
+        i3)       install_i3 ;;
+        gnome)    install_gnome ;;
+        cinnamon) install_cinnamon ;;
+        lxqt)     install_lxqt ;;
+        *)        printf 'error: unsupported desktop %s\n' "$de" >&2; exit 1 ;;
+    esac
+
+    if [ ! -x "$STARTWM_DIR/startwm.sh" ]; then
+        printf 'error: no startwm.sh was configured\n' >&2
+        exit 1
+    fi
+    chmod +x "$STARTWM_DIR/startwm.sh"
+
+    rm -f /startwm-*.sh /jammy.dconf.conf /install-de.sh
+    log "desktop ready"
+}
+
+main "$@"
