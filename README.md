@@ -81,10 +81,13 @@ Compose builds the same image with Cinnamon and no optional apps. Use
 ```bash
 ./trevvm.sh status
 ./trevvm.sh start | stop | restart
-./trevvm.sh logs -f
+./trevvm.sh open                # print the URL, open it when possible
+./trevvm.sh logs -f             # add --app for the app install log
 ./trevvm.sh shell
+./trevvm.sh update --check      # show incoming commits without rebuilding
 ./trevvm.sh update
 ./trevvm.sh backup              # backups/trevvm-backup-*.tar.gz
+./trevvm.sh backup --keep 5     # keep only the newest five
 ./trevvm.sh restore FILE
 ./trevvm.sh reset               # wipe save data, restore defaults
 ./trevvm.sh doctor              # docker, KVM, port, disk, save checks
@@ -131,7 +134,10 @@ survive an update:
 ```
 
 `Save/` is a bind mount and is always preserved; the snapshot covers the
-container filesystem.
+container filesystem. `install.sh --update` and `trevvm.sh update` also commit
+the outgoing container to `trevvm:pre-rebuild-*` before replacing it, so an
+update does not silently lose apt-installed software. Set
+`TREVVM_SNAPSHOT_ON_UPDATE=0` to skip that automatic snapshot.
 
 ## Panic key
 
