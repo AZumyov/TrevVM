@@ -551,6 +551,16 @@ prepare_save() {
 
 run_container() {
     if container_exists; then
+        if [ "${TREVVM_SNAPSHOT_ON_UPDATE:-1}" != "0" ]; then
+            local snapshot
+            snapshot="${IMAGE}:pre-rebuild-$(date +%Y%m%d-%H%M%S)"
+            if docker commit "$CONTAINER" "$snapshot" >/dev/null 2>&1; then
+                ok "Snapshot of the old container: $snapshot"
+                log "Restore it later with: trevvm.sh use $snapshot"
+            else
+                warn "Could not snapshot the old container; continuing."
+            fi
+        fi
         log "Replacing the existing container (save data is kept)"
         docker rm -f "$CONTAINER" >/dev/null
     fi

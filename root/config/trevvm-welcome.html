@@ -43,7 +43,8 @@
     <tr><td><code>./trevvm.sh status</code></td><td>Container state, health, URL, save path.</td></tr>
     <tr><td><code>./trevvm.sh logs -f</code></td><td>Follow the desktop logs.</td></tr>
     <tr><td><code>./trevvm.sh backup</code></td><td>Archive <code>Save/</code> into <code>backups/</code>.</td></tr>
-    <tr><td><code>./trevvm.sh update</code></td><td>Pull, rebuild and recreate; keeps <code>Save/</code>.</td></tr>
+    <tr><td><code>./trevvm.sh update --check</code></td><td>Show incoming commits without rebuilding.</td></tr>
+    <tr><td><code>./trevvm.sh update</code></td><td>Pull, rebuild and recreate; keeps <code>Save/</code> and snapshots the old container.</td></tr>
     <tr><td><code>./trevvm.sh doctor</code></td><td>Check Docker, KVM, port, disk and save state.</td></tr>
 </table>
 

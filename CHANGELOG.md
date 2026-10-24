@@ -34,6 +34,11 @@
   software survives an update (`trevvm.sh snapshot` / `use`).
 * `trevvm.sh panic` serves a bookmarklet page; `panic.user.js` adds the same
   key as a persistent userscript.
+* `trevvm.sh update --check` shows incoming commits without rebuilding.
+* `trevvm.sh logs --app` reads the app install log; `status` shows live CPU
+  and memory use; `backup --keep N` prunes old archives.
+* Every update snapshots the outgoing container to `trevvm:pre-rebuild-*`
+  before replacing it (`TREVVM_SNAPSHOT_ON_UPDATE=0` disables it).
 * A welcome page and desktop shortcut document the commands.
 * `apps install ID` adds a catalog app to a running VM without rebuilding.
 * Healthcheck in the image and `docker-compose.yml` for compose users.

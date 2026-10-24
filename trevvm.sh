@@ -19,7 +19,9 @@ SAVE_DIR="${TREVVM_SAVE:-$ROOT/Save}"
 BACKUP_DIR="${TREVVM_BACKUP_DIR:-$ROOT/backups}"
 ASSUME_YES=0
 FOLLOW=0
+APP_LOG=0
 TAIL_LINES=100
+KEEP=0
 
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
     C_RESET=$'\033[0m'
@@ -51,10 +53,12 @@ Usage: ./trevvm.sh <command> [options]
   restart               restart the container
   status                container, health, URL and save path
   url                   print the browser URL
-  logs [-f] [--tail N]  show container logs (default: last $TAIL_LINES lines)
+  open                  open the URL locally when a browser is available
+  logs [-f] [--app]     show container logs (or the app install log)
+       [--tail N]
   shell                 open a root shell inside the container
-  update                pull, rebuild and recreate, keeping save data
-  backup [FILE]         archive the save directory
+  update [--check]      pull, rebuild and recreate, keeping save data
+  backup [FILE]         archive the save directory (--keep N prunes old ones)
   restore FILE          restore a backup (stops the container first)
   reset                 delete save data and restore the defaults
   config                print the options used for the last build
@@ -214,6 +218,10 @@ cmd_status() {
     cpus="$(docker inspect -f '{{.HostConfig.NanoCpus}}' "$CONTAINER" 2>/dev/null || printf 0)"
     awk -v m="${memory:-0}" 'BEGIN { if (m + 0 > 0) printf "Memory     %.1f GB\n", m / 1073741824 }'
     awk -v c="${cpus:-0}" 'BEGIN { if (c + 0 > 0) printf "CPUs       %.2f\n", c / 1000000000 }'
+
+    local usage
+    usage="$(docker stats --no-stream --format '{{.CPUPerc}} CPU, {{.MemUsage}}' "$CONTAINER" 2>/dev/null || true)"
+    [ -n "$usage" ] && printf 'Usage      %s\n' "$usage"
 }
 
 cmd_logs() {
@@ -222,6 +230,18 @@ cmd_logs() {
     case "$TAIL_LINES" in
         ''|*[!0-9]*) die "--tail must be a number" ;;
     esac
+
+    if [ "$APP_LOG" -eq 1 ]; then
+        running || die "The container is stopped. Run ./trevvm.sh start."
+        if ! docker exec "$CONTAINER" test -f /config/trevvm-apps.log 2>/dev/null; then
+            die "No app log yet. Install an app with ./trevvm.sh apps install ID."
+        fi
+        local tail_args=(-n "$TAIL_LINES")
+        [ "$FOLLOW" -eq 1 ] && tail_args+=(-f)
+        docker exec "$CONTAINER" tail "${tail_args[@]}" /config/trevvm-apps.log
+        return
+    fi
+
     local args=(logs "--tail" "$TAIL_LINES")
     [ "$FOLLOW" -eq 1 ] && args+=("--follow")
     docker "${args[@]}" "$CONTAINER"
@@ -237,6 +257,23 @@ cmd_shell() {
 
 cmd_update() {
     [ -x "$ROOT/install.sh" ] || die "install.sh is missing from $ROOT."
+
+    if [ "${1:-}" = "--check" ]; then
+        [ -d "$ROOT/.git" ] || die "$ROOT is not a git checkout; use ./install.sh --update."
+        git -C "$ROOT" fetch --quiet
+        local upstream behind
+        upstream="$(git -C "$ROOT" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
+        [ -n "$upstream" ] || die "No upstream branch is configured for $ROOT."
+        behind="$(git -C "$ROOT" rev-list --count "HEAD..$upstream")"
+        if [ "$behind" -eq 0 ]; then
+            ok "Up to date with $upstream"
+        else
+            log "$behind commit(s) behind $upstream"
+            git -C "$ROOT" log --oneline -n 10 "HEAD..$upstream"
+        fi
+        return 0
+    fi
+
     local args=()
     [ "$ASSUME_YES" -eq 1 ] && args+=(-y)
     exec "$ROOT/install.sh" --update "${args[@]}" "$@"
@@ -244,6 +281,9 @@ cmd_update() {
 
 cmd_backup() {
     local target="${1:-}"
+    case "$KEEP" in
+        ''|*[!0-9]*) die "--keep must be a number" ;;
+    esac
     require_container
     require_save_dir
     [ -d "$SAVE_DIR" ] || die "Save directory not found: $SAVE_DIR"
@@ -256,6 +296,16 @@ cmd_backup() {
     log "Backing up $SAVE_DIR"
     tar -czf "$target" -C "$(dirname "$SAVE_DIR")" "$(basename "$SAVE_DIR")"
     ok "Backup written to $target ($(du -h "$target" | awk '{print $1}'))"
+
+    if [ "$KEEP" -gt 0 ]; then
+        local old
+        while IFS= read -r old; do
+            [ -n "$old" ] || continue
+            rm -f -- "$old"
+        done < <(find "$BACKUP_DIR" -maxdepth 1 -name 'trevvm-backup-*.tar.gz' -printf '%T@ %p\n' 2>/dev/null \
+            | sort -rn | tail -n +$((KEEP + 1)) | cut -d' ' -f2-)
+        log "Kept the newest $KEEP backup(s)"
+    fi
 }
 
 cmd_restore() {
@@ -519,6 +569,15 @@ cmd_use() {
     ok "Running $tag at $(access_url)"
 }
 
+cmd_open() {
+    local url
+    url="$(access_url)"
+    if [ -n "${DISPLAY:-}" ] && command -v xdg-open >/dev/null 2>&1; then
+        xdg-open "$url" >/dev/null 2>&1 || true
+    fi
+    printf '%s\n' "$url"
+}
+
 cmd_panic() {
     local port="${1:-8080}"
     [ -f "$ROOT/panic.html" ] || die "panic.html is missing from $ROOT."
@@ -540,6 +599,9 @@ parse_common() {
             -f|--follow) FOLLOW=1; shift ;;
             --tail) [ $# -ge 2 ] || die "--tail needs a number"; TAIL_LINES="$2"; shift 2 ;;
             --tail=*) TAIL_LINES="${1#*=}"; shift ;;
+            --app) APP_LOG=1; shift ;;
+            --keep) [ $# -ge 2 ] || die "--keep needs a number"; KEEP="$2"; shift 2 ;;
+            --keep=*) KEEP="${1#*=}"; shift ;;
             --purge) PURGE=1; shift ;;
             *) break ;;
         esac
@@ -558,6 +620,7 @@ case "$command" in
     restart) cmd_restart ;;
     status) cmd_status ;;
     url) access_url; printf '\n' ;;
+    open) cmd_open ;;
     logs) cmd_logs ;;
     shell) cmd_shell ;;
     update) cmd_update "$@" ;;
