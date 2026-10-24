@@ -60,6 +60,10 @@ Usage: ./trevvm.sh <command> [options]
   config                print the options used for the last build
   doctor                diagnose Docker, KVM, port, disk and save state
   clean                 prune build cache and unused images (asks first)
+  snapshot [TAG]        save the running container as an image
+  snapshots             list snapshot images
+  use IMAGE[:TAG]       recreate the container from an image, keeping save data
+  panic [PORT]          serve panic.html locally for the bookmarklet
   apps list             list installable apps
   apps install ID       install an app into the running container
   uninstall [--purge]   remove the container (--purge: image + save data)
@@ -82,10 +86,15 @@ running() {
 }
 
 access_url() {
+    local port="$PORT" mapped=""
+    if exists; then
+        mapped="$(container_port)"
+        [ -n "$mapped" ] && port="$mapped"
+    fi
     if [ -n "${CODESPACE_NAME:-}" ] && [ -n "${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-}" ]; then
-        printf 'https://%s-%s.%s' "$CODESPACE_NAME" "$PORT" "$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN"
+        printf 'https://%s-%s.%s' "$CODESPACE_NAME" "$port" "$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN"
     else
-        printf 'http://localhost:%s' "$PORT"
+        printf 'http://localhost:%s' "$port"
     fi
 }
 
@@ -106,14 +115,17 @@ confirm() {
 }
 
 wait_healthy() {
-    local timeout="${1:-120}"
-    local start=$SECONDS
+    local timeout="${1:-120}" start=$SECONDS check_port
+    check_port="$(container_port)"
+    [ -n "$check_port" ] || check_port="$PORT"
     while [ $((SECONDS - start)) -lt "$timeout" ]; do
         if [ "$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$CONTAINER" 2>/dev/null || true)" = "healthy" ]; then
             return 0
         fi
         running || return 1
-        port_in_use && return 0
+        if port_in_use "$check_port"; then
+            return 0
+        fi
         sleep 2
     done
     return 1
@@ -128,6 +140,21 @@ require_save_dir() {
     case "$SAVE_DIR" in
         /|"$HOME"|"$HOME/") die "Refusing to use $SAVE_DIR as the save directory." ;;
     esac
+}
+
+container_env() {
+    docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$CONTAINER" 2>/dev/null \
+        | sed -n "s/^$1=//p" | head -n 1
+}
+
+container_mount() {
+    docker inspect -f '{{range .Mounts}}{{if eq .Destination "/config"}}{{.Source}}{{end}}{{end}}' \
+        "$CONTAINER" 2>/dev/null || true
+}
+
+container_port() {
+    docker inspect -f '{{range $p, $conf := .NetworkSettings.Ports}}{{if eq $p "3000/tcp"}}{{(index $conf 0).HostPort}}{{end}}{{end}}' \
+        "$CONTAINER" 2>/dev/null || true
 }
 
 cmd_start() {
@@ -181,6 +208,12 @@ cmd_status() {
     [ -n "$save_path" ] && printf 'Save       %s\n' "$save_path"
     printf 'Port       %s\n' "$(docker port "$CONTAINER" 3000/tcp 2>/dev/null || printf 'not published')"
     printf 'Uptime     %s\n' "$(docker inspect -f '{{.State.StartedAt}}' "$CONTAINER")"
+
+    local memory cpus
+    memory="$(docker inspect -f '{{.HostConfig.Memory}}' "$CONTAINER" 2>/dev/null || printf 0)"
+    cpus="$(docker inspect -f '{{.HostConfig.NanoCpus}}' "$CONTAINER" 2>/dev/null || printf 0)"
+    awk -v m="${memory:-0}" 'BEGIN { if (m + 0 > 0) printf "Memory     %.1f GB\n", m / 1073741824 }'
+    awk -v c="${cpus:-0}" 'BEGIN { if (c + 0 > 0) printf "CPUs       %.2f\n", c / 1000000000 }'
 }
 
 cmd_logs() {
@@ -406,6 +439,94 @@ PY
     esac
 }
 
+cmd_snapshot() {
+    require_docker
+    require_container
+    local tag="${1:-}"
+    if [ -z "$tag" ]; then
+        tag="${IMAGE}:snapshot-$(date +%Y%m%d-%H%M%S)"
+    else
+        case "$tag" in
+            *:*) ;;
+            *) tag="${IMAGE}:${tag}" ;;
+        esac
+    fi
+
+    log "Saving $CONTAINER as $tag"
+    docker commit "$CONTAINER" "$tag" >/dev/null
+    ok "Snapshot saved: $tag"
+    printf '  Restore with: %s use %s\n' "$0" "$tag"
+}
+
+cmd_snapshots() {
+    require_docker
+    docker images "$IMAGE" --format 'table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedSince}}'
+}
+
+cmd_use() {
+    require_docker
+    local tag="${1:-}"
+    [ -n "$tag" ] || die "Usage: ./trevvm.sh use IMAGE[:TAG]"
+    docker image inspect "$tag" >/dev/null 2>&1 || die "Image not found: $tag"
+    require_container
+
+    local port save shm tz puid pgid auth_user auth_pass
+    port="$(container_port)"
+    [ -n "$port" ] || port="$PORT"
+    save="$(container_mount)"
+    [ -n "$save" ] || save="$SAVE_DIR"
+    shm="$(docker inspect -f '{{.HostConfig.ShmSize}}' "$CONTAINER" 2>/dev/null || true)"
+    if [ -z "$shm" ] || [ "$shm" = "0" ]; then
+        shm="2g"
+    fi
+    tz="$(container_env TZ)"
+    [ -n "$tz" ] || tz="Etc/UTC"
+    puid="$(container_env PUID)"
+    [ -n "$puid" ] || puid="$(id -u)"
+    pgid="$(container_env PGID)"
+    [ -n "$pgid" ] || pgid="$(id -g)"
+    auth_user="$(container_env CUSTOM_USER)"
+    auth_pass="$(container_env PASSWORD)"
+
+    if ! confirm "Recreate $CONTAINER from $tag? Save data in $save is kept."; then
+        printf 'Cancelled.\n'
+        return 0
+    fi
+
+    docker stop "$CONTAINER" >/dev/null 2>&1 || true
+    docker rm -f "$CONTAINER" >/dev/null
+
+    local args=(run --detach
+        --name "$CONTAINER"
+        --restart unless-stopped
+        --env "PUID=$puid"
+        --env "PGID=$pgid"
+        --env "TZ=$tz"
+        --env "SUBFOLDER=/"
+        --env "TITLE=TrevVM"
+        --publish "${port}:3000"
+        --shm-size "$shm"
+        --security-opt seccomp=unconfined
+        --volume "${save}:/config")
+
+    [ -n "$auth_user" ] && args+=(--env "CUSTOM_USER=$auth_user")
+    [ -n "$auth_pass" ] && args+=(--env "PASSWORD=$auth_pass")
+    [ -e /dev/kvm ] && args+=(--device /dev/kvm)
+
+    log "Starting $CONTAINER from $tag"
+    docker "${args[@]}" "$tag" >/dev/null
+    wait_healthy 120 || warn "Started, but not healthy yet. Check: ./trevvm.sh logs"
+    ok "Running $tag at $(access_url)"
+}
+
+cmd_panic() {
+    local port="${1:-8080}"
+    [ -f "$ROOT/panic.html" ] || die "panic.html is missing from $ROOT."
+    command -v python3 >/dev/null 2>&1 || die "Python 3 is required to serve panic.html."
+    printf 'Open http://localhost:%s/panic.html (Ctrl+C stops the server)\n' "$port"
+    ( cd "$ROOT" && exec python3 -m http.server "$port" )
+}
+
 cmd_uninstall() {
     [ -x "$ROOT/install.sh" ] || die "install.sh is missing from $ROOT."
     TREVVM_SAVE="$SAVE_DIR" exec "$ROOT/install.sh" --uninstall "$@"
@@ -446,6 +567,10 @@ case "$command" in
     config) cmd_config ;;
     doctor) cmd_doctor ;;
     clean) cmd_clean ;;
+    snapshot) cmd_snapshot "${1:-}" ;;
+    snapshots) cmd_snapshots ;;
+    use) cmd_use "${1:-}" ;;
+    panic) cmd_panic "${1:-}" ;;
     apps) cmd_apps "$@" ;;
     uninstall)
         args=()

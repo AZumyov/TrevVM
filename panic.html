@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrevVM panic key</title>
+<style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.55; max-width: 44rem; margin: 3rem auto; padding: 0 1.25rem; color: #1c1c1c; }
+    h1 { font-size: 1.5rem; }
+    code, pre { font-family: ui-monospace, Consolas, monospace; font-size: .92em; }
+    code { background: #f2f2f2; padding: .08em .3em; border-radius: 3px; }
+    pre { background: #f6f6f6; padding: .8rem 1rem; overflow-x: auto; }
+    a.button { display: inline-block; padding: .6rem 1rem; border: 1px solid #1c1c1c; color: #1c1c1c; text-decoration: none; border-radius: 4px; }
+    .muted { color: #666; }
+</style>
+</head>
+<body>
+<h1>TrevVM panic key</h1>
+<p>Press <code>=</code> while the desktop tab is focused to replace it with a neutral page. This runs in your local browser, not inside the VM.</p>
+
+<h2>Option 1: bookmarklet</h2>
+<p>Drag this link to your bookmarks bar, then click it once on the desktop tab:</p>
+<p><a class="button" href="javascript:(function(){var s='https://www.google.com',r=false;function e(t){return !!t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))}function p(n){var k=n.code==='Equal'||n.code==='NumpadEqual'||n.key==='=';if(!k||n.altKey||n.ctrlKey||n.shiftKey||n.metaKey||r||e(n.target))return;n.preventDefault();r=true;location.replace(s)}window.addEventListener('keydown',p,true)})()">Panic key</a></p>
+<p class="muted">A bookmarklet runs only on the page where you click it. You need to click it again after a full page reload.</p>
+
+<h2>Option 2: userscript</h2>
+<p>Install Tampermonkey or Violentmonkey, then add <code>panic.user.js</code>. It runs automatically on localhost and Codespaces preview domains, including after reloads.</p>
+
+<h2>Change the destination</h2>
+<p>Edit <code>s='https://www.google.com'</code> in the bookmarklet or in <code>panic.user.js</code>. Any neutral page works.</p>
+</body>
+</html>

@@ -21,6 +21,8 @@ CONTAINER="${TREVVM_CONTAINER:-TrevVM}"
 IMAGE="${TREVVM_IMAGE:-trevvm}"
 PORT="${TREVVM_PORT:-3000}"
 SHM="${TREVVM_SHM:-2gb}"
+MEMORY="${TREVVM_MEMORY:-}"
+CPUS="${TREVVM_CPUS:-}"
 KVM_MODE="${TREVVM_KVM:-auto}"
 WORKDIR="${TREVVM_DIR:-}"
 SAVE_DIR="${TREVVM_SAVE:-}"
@@ -95,6 +97,8 @@ Install:
       --all              select every package
       --none             select no optional packages
       --port PORT|auto   host port for the web desktop (default: $PORT)
+      --memory SIZE      container memory limit (example: 6g)
+      --cpus COUNT       CPU limit (example: 2 or 1.5)
       --kvm              force KVM acceleration
       --no-kvm           disable KVM acceleration
       --save PATH        config directory (default: <repo>/Save)
@@ -140,6 +144,10 @@ parse_args() {
             --none) SELECT_NONE=1; shift ;;
             --port) [ $# -ge 2 ] || die "--port needs a value"; PORT="$2"; shift 2 ;;
             --port=*) PORT="${1#*=}"; shift ;;
+            --memory) [ $# -ge 2 ] || die "--memory needs a value"; MEMORY="$2"; shift 2 ;;
+            --memory=*) MEMORY="${1#*=}"; shift ;;
+            --cpus) [ $# -ge 2 ] || die "--cpus needs a value"; CPUS="$2"; shift 2 ;;
+            --cpus=*) CPUS="${1#*=}"; shift ;;
             --kvm) KVM_MODE="yes"; shift ;;
             --no-kvm) KVM_MODE="no"; shift ;;
             --save) [ $# -ge 2 ] || die "--save needs a value"; SAVE_DIR="$2"; shift 2 ;;
@@ -177,6 +185,16 @@ parse_args() {
     esac
     if [ "$PORT" -lt 1 ] || [ "$PORT" -gt 65535 ]; then
         die "--port must be between 1 and 65535"
+    fi
+    if [ -n "$MEMORY" ]; then
+        case "$MEMORY" in
+            *[!0-9bkmgBKMGT]*) die "--memory must look like 512m or 6g" ;;
+        esac
+    fi
+    if [ -n "$CPUS" ]; then
+        case "$CPUS" in
+            *[!0-9.]*) die "--cpus must be a number like 2 or 1.5" ;;
+        esac
     fi
     if [ "$PURGE" -eq 1 ] && [ "$MODE" != "uninstall" ]; then
         die "--purge only makes sense together with --uninstall"
@@ -391,7 +409,8 @@ setup_python() {
         if ! "$PYTHON" -m venv "$venv" >/dev/null 2>&1; then
             warn "python3 -m venv failed; trying to install python3-venv"
             if have sudo && [ "$(id -u)" -ne 0 ]; then
-                sudo apt-get update -qq && sudo apt-get install -y -qq python3-venv || true
+                sudo apt-get update -qq || true
+                sudo apt-get install -y -qq python3-venv || true
             fi
             if ! "$PYTHON" -m venv "$venv" >/dev/null 2>&1; then
                 warn "Falling back to the system Python (dependencies may conflict)."
@@ -548,6 +567,13 @@ run_container() {
         --shm-size "$SHM"
         --security-opt seccomp=unconfined
         --volume "${SAVE_DIR}:/config")
+
+    if [ -n "$MEMORY" ]; then
+        args+=(--memory "$MEMORY")
+    fi
+    if [ -n "$CPUS" ]; then
+        args+=(--cpus "$CPUS")
+    fi
 
     if [ -n "${TREVVM_USER:-}" ]; then
         args+=(--env "CUSTOM_USER=${TREVVM_USER}")
@@ -722,6 +748,8 @@ print_plan() {
     printf '  image       %s\n' "$IMAGE"
     printf '  container   %s\n' "$CONTAINER"
     printf '  port        %s\n' "$PORT"
+    printf '  memory      %s\n' "${MEMORY:-unlimited}"
+    printf '  cpus        %s\n' "${CPUS:-unlimited}"
     printf '  save        %s\n' "${SAVE_DIR:-${REPO_DIR:-$PWD/TrevVM}/Save}"
     printf '  kvm         %s\n' "$( [ "$USE_KVM" -eq 1 ] && printf enabled || printf disabled )"
     printf '  timezone    %s\n' "$(detect_tz)"

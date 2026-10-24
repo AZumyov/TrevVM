@@ -27,7 +27,14 @@
 ### Runtime
 
 * New `trevvm.sh`: start, stop, restart, status, logs, shell, update, backup,
-  restore, reset, doctor, clean, uninstall and `apps`.
+  restore, reset, doctor, clean, uninstall, `apps`, `snapshot`, `snapshots`,
+  `use` and `panic`.
+* Container memory and CPU limits through `--memory` / `--cpus`.
+* Snapshots commit the running container to an image, so apt-installed
+  software survives an update (`trevvm.sh snapshot` / `use`).
+* `trevvm.sh panic` serves a bookmarklet page; `panic.user.js` adds the same
+  key as a persistent userscript.
+* A welcome page and desktop shortcut document the commands.
 * `apps install ID` adds a catalog app to a running VM without rebuilding.
 * Healthcheck in the image and `docker-compose.yml` for compose users.
 * Save directory is resolved to an absolute path and seeded without
@@ -49,7 +56,8 @@
 ### Tooling and docs
 
 * `apps.json` is the single source of truth for desktops and packages.
-* CI runs ShellCheck, pytest and a cached Docker build.
+* `scripts/ci.sh` runs ShellCheck, pytest, hadolint and an installer dry run.
+* CI runs that script plus a cached Docker build.
 * `.gitattributes` enforces LF for scripts, preventing the CRLF regression.
 * README, UPDATES and a new troubleshooting guide match the actual behavior.
 

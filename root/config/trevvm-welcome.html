@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrevVM</title>
+<style>
+    body {
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        line-height: 1.55;
+        max-width: 46rem;
+        margin: 3rem auto;
+        padding: 0 1.25rem;
+        color: #1c1c1c;
+        background: #fff;
+    }
+    h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; }
+    p, li { max-width: 42rem; }
+    code, pre {
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        font-size: .92em;
+    }
+    code { background: #f2f2f2; padding: .08em .3em; border-radius: 3px; }
+    pre { background: #f6f6f6; padding: .8rem 1rem; overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; margin: .5rem 0 1rem; }
+    th, td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid #e5e5e5; vertical-align: top; }
+    th { font-weight: 600; }
+    .muted { color: #666; }
+</style>
+</head>
+<body>
+<h1>TrevVM</h1>
+<p class="muted">A Linux desktop running in a container. This page is a local reference; it does not require internet access.</p>
+
+<h2>Where your files live</h2>
+<p>Your home directory inside the desktop is mounted from the host's <code>Save/</code> folder. Files there survive restarts, rebuilds and updates. Everything outside it is part of the image.</p>
+
+<h2>Run these in the Codespaces terminal</h2>
+<p class="muted">Not inside the desktop. The control script lives in the repository checkout.</p>
+<table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>./trevvm.sh status</code></td><td>Container state, health, URL, save path.</td></tr>
+    <tr><td><code>./trevvm.sh logs -f</code></td><td>Follow the desktop logs.</td></tr>
+    <tr><td><code>./trevvm.sh backup</code></td><td>Archive <code>Save/</code> into <code>backups/</code>.</td></tr>
+    <tr><td><code>./trevvm.sh update</code></td><td>Pull, rebuild and recreate; keeps <code>Save/</code>.</td></tr>
+    <tr><td><code>./trevvm.sh doctor</code></td><td>Check Docker, KVM, port, disk and save state.</td></tr>
+</table>
+
+<h2>Adding apps</h2>
+<pre>./trevvm.sh apps list
+./trevvm.sh apps install vlc</pre>
+<p>Apps installed this way live in the container. Run <code>./trevvm.sh snapshot</code> afterwards if you want to keep the changed system across an update.</p>
+
+<h2>Snapshots</h2>
+<pre>./trevvm.sh snapshot my-setup
+./trevvm.sh snapshots
+./trevvm.sh use trevvm:my-setup</pre>
+<p>A snapshot is a Docker image committed from the running container. It preserves apt-installed software and system changes, but not <code>Save/</code> (that is already persistent).</p>
+
+<h2>Panic key</h2>
+<p>The optional panic key is a browser-side userscript or bookmarklet. Open <code>panic.html</code> from the repository, or run <code>./trevvm.sh panic</code> in the terminal and open the printed URL. It is not installed into the desktop.</p>
+
+<h2>If the desktop feels slow</h2>
+<p>Rebuild with a lighter desktop: <code>./install.sh --reinstall --de xfce -y</code>. KVM acceleration is used automatically when the host exposes <code>/dev/kvm</code>.</p>
+</body>
+</html>

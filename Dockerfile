@@ -30,7 +30,7 @@ RUN set -eux; \
     rm -f /etc/apt/sources.list.d/nodesource.list; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        software-properties-common ca-certificates curl gnupg jq wget; \
+        software-properties-common ca-certificates curl gnupg jq wget xdg-utils; \
     add-apt-repository -y ppa:mozillateam/ppa; \
     apt-get update; \
     apt-get install -y --no-install-recommends firefox; \

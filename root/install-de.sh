@@ -70,7 +70,7 @@ rc_append() {
 }
 
 install_kde() {
-    apt_install dolphin gwenview kde-config-gtk-style kdialog kfind khotkeys \
+    apt_install firefox dolphin gwenview kde-config-gtk-style kdialog kfind khotkeys \
         kio-extras knewstuff-dialog konsole ksystemstats kwin-addons kwin-x11 \
         kwrite plasma-desktop plasma-workspace qml-module-qt-labs-platform systemsettings
     local taskbar=/usr/share/plasma/plasmoids/org.kde.plasma.taskmanager/contents/config/main.xml
