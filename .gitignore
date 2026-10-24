@@ -1,1 +1,9 @@
 options.json
+.venv/
+__pycache__/
+*.py[cod]
+*.log
+backups/
+tmp-options.json
+.DS_Store
+.pytest_cache/

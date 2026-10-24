@@ -1,0 +1,10 @@
+*.sh text eol=lf
+*.py text eol=lf
+*.desktop text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.tcss text eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary

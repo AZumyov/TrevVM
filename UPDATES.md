@@ -1,20 +1,33 @@
-# How to update in codespaces
+# Updating TrevVM
 
-You can update by running the following in your terminal.
-```
-git pull
-```
-## Already installed
-If you already installed TrevVM and dont know how to start it, you can run this. (ignore the plus)
-```diff
-+ docker start TrevVM
-```
-This will run TrevVM without any interruptions, as long as you ran the correct commandds to install it. (as shown in README.md)
+## Recommended
 
-## Recommendations
-- Enable browser acceleration when needed.
-- Pick Cinnamon, fastest Linux desktop near windows.
-- Pick all the apps you are gonna use, dont select all because of lag.
-- Check our wiki for any questions you may have.
+```bash
+./trevvm.sh update
+```
 
-###### (C) 2026-present <a href="https://github.com/TrevorTesch/TrevVM/"><b>TrevVM</b></a> and its contributors. Always follow the rules and policies of the repo before making/create anything to/from the repo.
+This pulls the latest source with `git pull --ff-only`, rebuilds the image and
+recreates the container. `Save/` is preserved.
+
+## If you installed from the standalone script
+
+```bash
+cd TrevVM
+./install.sh --update
+```
+
+## Start an existing install
+
+```bash
+./trevvm.sh start
+```
+
+## What is preserved
+
+* `Save/` - the desktop home directory and configuration.
+* `options.json` - your desktop and app selection.
+
+## What is replaced
+
+* The `trevvm` image.
+* The `TrevVM` container (same name, same port).

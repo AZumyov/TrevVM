@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "desktops": [
+    {
+      "id": "cinnamon",
+      "label": "Cinnamon - recommended, familiar layout",
+      "script": "startwm-cinnamon.sh"
+    },
+    {
+      "id": "xfce",
+      "label": "XFCE4 - lightweight",
+      "script": "startwm-xfce.sh"
+    },
+    {
+      "id": "kde",
+      "label": "KDE Plasma - heavy, full featured",
+      "script": "startwm-kde.sh"
+    },
+    {
+      "id": "i3",
+      "label": "i3 - very light, tiling",
+      "script": "startwm-i3.sh"
+    },
+    {
+      "id": "gnome",
+      "label": "GNOME 42 - very heavy",
+      "script": "startwm-gnome.sh"
+    },
+    {
+      "id": "lxqt",
+      "label": "LXQt - experimental",
+      "script": "startwm-lxqt.sh"
+    }
+  ],
+  "groups": [
+    {
+      "key": "defaultapps",
+      "title": "Everyday apps",
+      "packages": [
+        {
+          "id": "wine",
+          "label": "Wine - run Windows apps",
+          "description": "Runs .exe installers inside the desktop (WineHQ staging).",
+          "script": "wine.sh",
+          "default": true
+        },
+        {
+          "id": "chrome",
+          "label": "Google Chrome",
+          "description": "Official Google repository, signed keyring.",
+          "script": "chrome.sh",
+          "default": true
+        },
+        {
+          "id": "xarchiver",
+          "label": "Xarchiver - archives",
+          "description": "Small GTK archive manager.",
+          "script": "xarchiver.sh",
+          "default": true
+        },
+        {
+          "id": "discord",
+          "label": "Discord",
+          "description": "Official Discord .deb.",
+          "script": "discord.sh",
+          "default": true
+        },
+        {
+          "id": "steam",
+          "label": "Steam",
+          "description": "Steam client with 32-bit dependencies.",
+          "script": "steam.sh",
+          "default": true
+        },
+        {
+          "id": "minecraft",
+          "label": "Minecraft launcher",
+          "description": "Official Mojang launcher.",
+          "script": "minecraft.sh",
+          "default": true
+        }
+      ]
+    },
+    {
+      "key": "programming",
+      "title": "Development",
+      "packages": [
+        {
+          "id": "openjdk-8-jre",
+          "label": "OpenJDK 8 (JRE)",
+          "description": "Legacy Java runtime.",
+          "script": "openjdk-8-jre.sh",
+          "default": false
+        },
+        {
+          "id": "openjdk-17-jre",
+          "label": "OpenJDK 17 (JRE)",
+          "description": "Current Java runtime.",
+          "script": "openjdk-17-jre.sh",
+          "default": false
+        },
+        {
+          "id": "vscodium",
+          "label": "VSCodium",
+          "description": "Telemetry-free VS Code build.",
+          "script": "vscodium.sh",
+          "default": false
+        }
+      ]
+    },
+    {
+      "key": "apps",
+      "title": "Utilities",
+      "packages": [
+        {
+          "id": "vlc",
+          "label": "VLC media player",
+          "description": "Plays most audio and video formats.",
+          "script": "vlc.sh",
+          "default": false
+        },
+        {
+          "id": "libreoffice",
+          "label": "LibreOffice",
+          "description": "Writer, Math, Impress and Base.",
+          "script": "libreoffice.sh",
+          "default": false
+        },
+        {
+          "id": "synaptic",
+          "label": "Synaptic package manager",
+          "description": "GTK front end for apt.",
+          "script": "synaptic.sh",
+          "default": false
+        },
+        {
+          "id": "aqemu",
+          "label": "AQEMU - virtual machines",
+          "description": "Qt front end for QEMU/KVM.",
+          "script": "aqemu.sh",
+          "default": false
+        },
+        {
+          "id": "tlauncher",
+          "label": "TLauncher - Minecraft",
+          "description": "Third-party Minecraft launcher.",
+          "script": "tlauncher.sh",
+          "default": false
+        }
+      ]
+    }
+  ]
+}

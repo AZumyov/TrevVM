@@ -1,7 +1,13 @@
-apt update
-apt install -y libatomic1
+#!/usr/bin/env bash
+# Discord from the official .deb endpoint.
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
 
-wget "https://discord.com/api/download?platform=linux&format=deb" -O discord.deb
-dpkg -i discord.deb
-sleep 1
-rm discord.deb
+apt-get update -qq
+apt-get install -y -qq --no-install-recommends libatomic1 ca-certificates wget
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+wget -qO "$tmp/discord.deb" "https://discord.com/api/download?platform=linux&format=deb"
+apt-get install -y -qq "$tmp/discord.deb"

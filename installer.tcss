@@ -1,25 +1,96 @@
-Screen, Horizontal, Vertical {
-    align: center middle;
-    padding: 0;
+Screen {
+    layout: vertical;
 }
 
-SelectionList, Select, Terminal {
-    width: 100%;
-    height: 50%;
+#intro {
+    height: auto;
+    max-height: 7;
+    margin: 1 2 0 2;
+    overflow: hidden;
 }
 
-Button {
-    width: 40%;
+#groups {
+    height: 1fr;
+    min-height: 6;
+    margin: 0 1;
+}
+
+.group {
+    width: 1fr;
+    height: 1fr;
+    margin: 0 1;
+    padding: 0 1;
+}
+
+.group-title {
+    text-style: bold;
+}
+
+.group SelectionList {
+    height: 1fr;
+    min-height: 4;
+    border: none;
     padding: 0;
+    background: transparent;
+}
+
+#settings {
+    height: auto;
+    margin: 0 3;
+}
+
+.setting {
+    width: 1fr;
+    height: auto;
+    margin-right: 2;
+}
+
+#kvm-hint {
+    color: $text-muted;
+}
+
+#actions {
+    height: auto;
+    align-horizontal: center;
     margin: 0;
 }
 
-Label {
-    margin-left: 1;
+#actions Button {
+    margin: 0 1;
+    min-width: 14;
 }
 
-#advinstall, #cancel, #install {
-    width: 100%;
+Footer {
+    height: auto;
+}
+
+ConfirmScreen {
+    align: center middle;
+}
+
+#dialog {
+    width: 74;
+    max-width: 90%;
+    height: auto;
+    border: thick $accent;
+    background: $surface;
+    padding: 1 2;
+}
+
+#dialog-title {
+    text-style: bold;
     margin-bottom: 1;
-    margin-left: 8;
+}
+
+#dialog-body {
+    margin-bottom: 1;
+}
+
+#dialog-actions {
+    height: auto;
+    align-horizontal: right;
+}
+
+#dialog-actions Button {
+    margin-left: 1;
 }
