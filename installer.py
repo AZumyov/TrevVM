@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
 import tempfile
 from dataclasses import dataclass, field
@@ -99,14 +100,13 @@ PACKAGE_IDS = tuple(package.id for group in GROUPS for package in group.packages
 PACKAGE_LABELS = {package.id: package.label for group in GROUPS for package in group.packages}
 DEFAULTS = {group.key: [package.id for package in group.packages if package.default] for group in GROUPS}
 
-INTRO = """
-# TrevVM Installer
+INTRO = """TrevVM Installer
 
-Choose a desktop and apps. Cinnamon is the safest default; larger selections
-take longer to build.
+Choose a desktop and apps. Cinnamon is the safest default; larger
+selections take longer to build.
 
-`Tab` moves, `Space` toggles, `Ctrl+S` reviews, `Esc` goes back.
-"""
+Tab moves, Space toggles, Ctrl+S reviews, Esc goes back."""
+
 
 
 # --------------------------------------------------------------------------
@@ -312,6 +312,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--no-kvm", dest="kvm", action="store_false", help="disable KVM acceleration")
     parser.set_defaults(kvm=None)
     parser.add_argument("--list", action="store_true", help="list package and desktop ids, then exit")
+    parser.add_argument("--simple", action="store_true", help="text mode, no mouse or full screen needed")
+    parser.add_argument("--tui", action="store_true", help="force the full-screen UI even on a small terminal")
     parser.add_argument("--version", action="version", version=f"TrevVM installer {INSTALLER_VERSION}")
     return parser.parse_args(argv)
 
@@ -329,6 +331,14 @@ def print_catalog() -> None:
 
 def has_selection_flags(args: argparse.Namespace) -> bool:
     return bool(args.defaults or args.all or args.none or args.apps)
+
+
+def terminal_too_small() -> bool:
+    try:
+        size = shutil.get_terminal_size()
+    except OSError:
+        return True
+    return size.columns < 60 or size.lines < 20
 
 
 def run_headless(args: argparse.Namespace) -> int:
@@ -360,7 +370,7 @@ def build_app_class():
     from textual.app import App, ComposeResult
     from textual.containers import Horizontal, Vertical
     from textual.screen import ModalScreen
-    from textual.widgets import Button, Footer, Header, Label, Markdown, Select, SelectionList, Static, Switch
+    from textual.widgets import Button, Footer, Header, Label, Select, SelectionList, Static, Switch
 
     class ConfirmScreen(ModalScreen[bool]):
         BINDINGS = [("escape", "dismiss_false", "Back")]
@@ -403,7 +413,7 @@ def build_app_class():
 
         def compose(self) -> ComposeResult:
             yield Header()
-            yield Markdown(INTRO, id="intro")
+            yield Static(INTRO, id="intro")
 
             with Horizontal(id="groups"):
                 for group in GROUPS:
@@ -495,6 +505,69 @@ def build_app_class():
     return InstallApp
 
 
+def run_simple_cli(output: Path, initial: Options) -> int:
+    """Plain text picker for terminals where a full-screen UI breaks down."""
+    selection = initial
+    print("TrevVM text installer (no mouse needed)")
+    print("Commands: show | list | de <id> | apps <id,id> | all | none | go | quit")
+
+    def set_packages(wanted: set[str]) -> None:
+        unknown = sorted(wanted.difference(PACKAGE_IDS))
+        if unknown:
+            raise ValueError(f"unknown package(s): {', '.join(unknown)}")
+        for group in GROUPS:
+            selection.selected[group.key] = [package.id for package in group.packages if package.id in wanted]
+
+    while True:
+        try:
+            line = input("trevvm> ")
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return 130
+
+        parts = line.strip().split()
+        if not parts:
+            continue
+        command, *args = parts
+        command = command.lower()
+
+        if command in {"quit", "q", "exit"}:
+            return 130
+        if command in {"help", "?"}:
+            print("show | list | de <id> | apps <id,id> | all | none | go | quit")
+        elif command == "show":
+            print(selection.summary())
+        elif command == "list":
+            print_catalog()
+        elif command == "de":
+            if not args:
+                print("usage: de <id> (see list)")
+                continue
+            try:
+                selection.desktop = validate_desktop(args[0])
+            except ValueError as error:
+                print(f"error: {error}")
+        elif command == "apps":
+            if not args:
+                print("usage: apps <id,id,...> (see list)")
+                continue
+            try:
+                set_packages({item for item in args[0].split(",") if item})
+            except ValueError as error:
+                print(f"error: {error}")
+        elif command == "all":
+            set_packages(set(PACKAGE_IDS))
+        elif command == "none":
+            selection.selected = {group.key: [] for group in GROUPS}
+        elif command == "go":
+            path = write_options(output, options_to_payload(selection))
+            print(selection.summary())
+            print(f"\nWrote {path}")
+            return 0
+        else:
+            print(f"unknown command: {command} (type help)")
+
+
 def run_tui(output: Path, initial: Options) -> int:
     InstallApp = build_app_class()
     app = InstallApp(output=output, initial=initial, kvm_available=kvm_supported())
@@ -512,7 +585,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.kvm is None:
         args.kvm = kvm_supported()
 
-    headless = has_selection_flags(args) or not sys.stdin.isatty()
+    headless = has_selection_flags(args) or (not sys.stdin.isatty() and not args.simple)
     if headless:
         if not has_selection_flags(args) and not sys.stdin.isatty():
             print("No terminal detected; using the default selection.", file=sys.stderr)
@@ -529,6 +602,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             except ValueError as error:
                 print(f"error: {error}", file=sys.stderr)
                 return 2
+
+    if args.simple or (not args.tui and terminal_too_small()):
+        if not args.simple:
+            print("Terminal is smaller than 60x20; using text mode. Resize for the UI.", file=sys.stderr)
+        try:
+            return run_simple_cli(args.output, initial)
+        except KeyboardInterrupt:
+            return 130
 
     try:
         return run_tui(args.output, initial)

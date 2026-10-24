@@ -105,6 +105,42 @@ def test_tui_actions_fit_80x24(tmp_path: Path) -> None:
     asyncio.run(exercise())
 
 
+def test_simple_cli_writes_file(tmp_path: Path, monkeypatch) -> None:
+    output = tmp_path / "options.json"
+    initial = installer.build_selection(kvm=False)
+    answers = iter(["de xfce", "apps wine,vlc", "go"])
+    monkeypatch.setattr("builtins.input", lambda *args: next(answers))
+
+    assert installer.run_simple_cli(output, initial) == 0
+    data = read_options(output)
+    assert data["DE"] == "xfce"
+    assert data["packages"] == ["wine", "vlc"]
+
+
+def test_simple_cli_rejects_unknown_app(tmp_path: Path, monkeypatch) -> None:
+    output = tmp_path / "options.json"
+    initial = installer.build_selection(kvm=False)
+    answers = iter(["apps nope", "quit"])
+    monkeypatch.setattr("builtins.input", lambda *args: next(answers))
+
+    assert installer.run_simple_cli(output, initial) == 130
+    assert not output.exists()
+
+
+def test_tui_actions_fit_60x20(tmp_path: Path) -> None:
+    initial = installer.build_selection(kvm=False)
+
+    async def exercise() -> None:
+        app_class = installer.build_app_class()
+        app = app_class(output=tmp_path / "options.json", initial=initial, kvm_available=False)
+        async with app.run_test(size=(60, 20)) as pilot:
+            await pilot.pause()
+            actions = app.query_one("#actions")
+            assert actions.region.y + actions.region.height <= app.size.height
+
+    asyncio.run(exercise())
+
+
 def test_tui_confirm_writes_file(tmp_path: Path) -> None:
     output = tmp_path / "options.json"
     initial = installer.build_selection(kvm=False)
