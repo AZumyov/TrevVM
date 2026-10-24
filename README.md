@@ -20,6 +20,10 @@ cd TrevVM
 The installer asks which desktop and apps you want, builds the image, starts
 the container, and prints the URL. The first build usually takes 10-30 minutes.
 
+If the full-screen picker glitches in a web terminal, use `./install.sh
+--simple` (keyboard only) or skip it entirely with `./install.sh -y`. In the
+UI, `Tab` moves, `Space` toggles, `Ctrl+S` reviews and `Enter` confirms.
+
 A plain `docker build .` also works; it produces Cinnamon with no optional
 apps. The installer passes your selection to the build as a build argument.
 
@@ -48,6 +52,7 @@ checkout, that checkout is used and nothing is cloned.
 | --- | --- |
 | `-y`, `--yes` | Use the default selection without the TUI. |
 | `--de ID` | `cinnamon`, `xfce`, `kde`, `i3`, `gnome` or `lxqt`. |
+| `--simple` | Text picker when the full-screen UI misbehaves. |
 | `--apps LIST` | Comma separated package ids (`python3 installer.py --list`). |
 | `--all`, `--none` | Select every package or no optional packages. |
 | `--port PORT` | Host port for the desktop, or `auto`. |

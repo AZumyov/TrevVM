@@ -42,6 +42,22 @@ Use another port, or let the installer choose one:
 If the old TrevVM container owns the port, `./trevvm.sh status` will show it.
 `./trevvm.sh restart` reuses the existing container.
 
+## The installer UI is glitchy or cannot be clicked
+
+Web terminals do not always pass mouse events to a full-screen program, and a
+narrow terminal can push buttons off screen.
+
+* Resize the terminal to at least 80x24 and rerun the installer.
+* Use the keyboard: `Tab` moves between widgets, `Space` toggles, `Ctrl+S`
+  opens the review screen, `Enter` confirms.
+* Skip the UI: `./install.sh --simple` is a text picker that only needs typing.
+* Or decide from the command line:
+
+```bash
+./install.sh -y --de xfce
+./install.sh -y --de cinnamon --apps wine,chrome
+```
+
 ## Build problems
 
 **`docker build` succeeds but the desktop has no apps**

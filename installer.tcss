@@ -35,6 +35,7 @@ Screen {
 }
 
 #settings {
+    dock: bottom;
     height: auto;
     margin: 0 3;
 }
@@ -50,6 +51,7 @@ Screen {
 }
 
 #actions {
+    dock: bottom;
     height: auto;
     align-horizontal: center;
     margin: 0;

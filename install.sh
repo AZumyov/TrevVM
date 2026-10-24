@@ -34,6 +34,7 @@ NO_CACHE=0
 DRY_RUN=0
 PURGE=0
 FORCE=0
+SIMPLE=0
 
 REPO_DIR=""
 OPTIONS_FILE=""
@@ -93,6 +94,7 @@ Usage:
 Install:
   -y, --yes              use the default selection (no TUI)
       --de ID            desktop: cinnamon, xfce, kde, i3, gnome, lxqt
+      --simple           text mode picker (no mouse or full screen needed)
       --apps LIST        comma separated package ids (see installer.py --list)
       --all              select every package
       --none             select no optional packages
@@ -138,6 +140,7 @@ parse_args() {
             -y|--yes|--non-interactive) ASSUME_YES=1; shift ;;
             --de) [ $# -ge 2 ] || die "--de needs a value"; DE_CHOICE="$2"; shift 2 ;;
             --de=*) DE_CHOICE="${1#*=}"; shift ;;
+            --simple) SIMPLE=1; shift ;;
             --apps) [ $# -ge 2 ] || die "--apps needs a value"; APPS_CHOICE="$2"; shift 2 ;;
             --apps=*) APPS_CHOICE="${1#*=}"; shift ;;
             --all) SELECT_ALL=1; shift ;;
@@ -447,6 +450,7 @@ installer_args() {
     esac
     if [ -n "$DE_CHOICE" ]; then args+=(--de "$DE_CHOICE"); fi
     if [ -n "$APPS_CHOICE" ]; then args+=(--apps "$APPS_CHOICE"); fi
+    if [ "$SIMPLE" -eq 1 ]; then args+=(--simple); fi
     if [ "$SELECT_ALL" -eq 1 ]; then args+=(--all); fi
     if [ "$SELECT_NONE" -eq 1 ]; then args+=(--none); fi
     printf '%s\n' "${args[@]}"
