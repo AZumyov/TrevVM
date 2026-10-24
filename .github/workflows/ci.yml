@@ -54,3 +54,13 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             VERSION=ci
+      - name: Smoke test the image
+        run: |
+          docker run --rm --entrypoint bash trevvm:ci -lc '
+            set -e
+            test -x /opt/trevvm/install-app.sh
+            test -f /opt/trevvm/apps.json
+            test -d /opt/trevvm/apps
+            test -x /defaults/startwm.sh
+            grep -q 'DE.:.cinnamon' /options.json
+          '
