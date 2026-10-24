@@ -29,12 +29,13 @@ Contributions are expected to follow the repository's Apache License 2.0 terms u
 Run these before opening a pull request:
 
 ```bash
-shellcheck -x install.sh trevvm.sh root/*.sh root/installable-apps/*.sh
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt pytest
-pytest -q
-./install.sh --dry-run
+./scripts/ci.sh
 ```
+
+The script runs ShellCheck, pytest, hadolint when installed, and an installer
+dry run. It is the same sequence CI uses.
 
 `apps.json` is the single source of truth for desktops and packages. If you add
 an app, add its script to `root/installable-apps/` and an entry to `apps.json`;

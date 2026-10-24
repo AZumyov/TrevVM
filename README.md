@@ -51,6 +51,8 @@ checkout, that checkout is used and nothing is cloned.
 | `--apps LIST` | Comma separated package ids (`python3 installer.py --list`). |
 | `--all`, `--none` | Select every package or no optional packages. |
 | `--port PORT` | Host port for the desktop, or `auto`. |
+| `--memory SIZE` | Container memory limit (`512m`, `6g`). |
+| `--cpus COUNT` | CPU limit (`2`, `1.5`). |
 | `--kvm`, `--no-kvm` | Override KVM detection. |
 | `--save PATH` | Save directory (default: `./Save`). |
 | `--dry-run` | Check the host and print the plan without changing anything. |
@@ -62,7 +64,8 @@ checkout, that checkout is used and nothing is cloned.
 
 Useful environment variables: `TREVVM_CONTAINER`, `TREVVM_IMAGE`,
 `TREVVM_PORT`, `TREVVM_SAVE`, `TREVVM_TZ`, `TREVVM_REPO`, `TREVVM_BRANCH`.
-`TREVVM_USER` and `TREVVM_PASSWORD` enable KasmVNC basic authentication.
+`TREVVM_MEMORY` and `TREVVM_CPUS` set container limits. `TREVVM_USER` and
+`TREVVM_PASSWORD` enable KasmVNC basic authentication.
 
 ## Docker Compose
 
@@ -85,6 +88,10 @@ Compose builds the same image with Cinnamon and no optional apps. Use
 ./trevvm.sh restore FILE
 ./trevvm.sh reset               # wipe save data, restore defaults
 ./trevvm.sh doctor              # docker, KVM, port, disk, save checks
+./trevvm.sh snapshot [TAG]      # save the container as an image
+./trevvm.sh snapshots           # list snapshots
+./trevvm.sh use IMAGE[:TAG]     # recreate from a snapshot
+./trevvm.sh panic [PORT]        # serve panic.html locally
 ./trevvm.sh uninstall [--purge]
 ```
 
@@ -112,19 +119,33 @@ Make the port private unless you are the only person who can reach it.
 KasmVNC starts without authentication; set `TREVVM_USER` and
 `TREVVM_PASSWORD` before installing if you need a login prompt.
 
-## Panic key
+## Snapshots
 
-`panicpress.js` is an optional browser-side snippet. It is not loaded by the
-image. Paste it into the DevTools console on the KasmVNC tab, or save it as a
-bookmarklet:
+A snapshot is a Docker image committed from the running container. Use it when
+you install software with `apt` inside the desktop and want that state to
+survive an update:
 
-```js
-javascript:(function(){/* contents of panicpress.js */})()
+```bash
+./trevvm.sh snapshot my-setup
+./trevvm.sh use trevvm:my-setup
 ```
 
-Press `=` to jump to `https://www.google.com`. Override the destination with
-`window.TREVVM_PANIC_URL` before pasting. The script ignores typing inside
-inputs, so it does not fire while you are editing a text field.
+`Save/` is a bind mount and is always preserved; the snapshot covers the
+container filesystem.
+
+## Panic key
+
+The panic key runs in your local browser, not inside the VM. Two options:
+
+* Install `panic.user.js` in Tampermonkey or Violentmonkey. It runs on
+  localhost and Codespaces preview domains and survives reloads.
+* Run `./trevvm.sh panic`, open the printed URL, and drag the bookmarklet to
+  your bookmarks bar.
+
+Press `=` to jump to `https://www.google.com`. Change `safeSite` in
+`panic.user.js` or the bookmarklet to use another page. The script ignores
+typing inside inputs, so it does not fire while you edit a text field.
+`panicpress.js` remains the readable single-file version of the same logic.
 
 ## Updating
 

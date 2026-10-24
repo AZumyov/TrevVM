@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=TrevVM Welcome
+Comment=Quick reference and management commands
+Exec=firefox /config/trevvm-welcome.html
+Icon=help-browser
+Terminal=false
+Categories=System;Documentation;
