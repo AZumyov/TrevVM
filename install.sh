@@ -409,7 +409,8 @@ setup_python() {
         if ! "$PYTHON" -m venv "$venv" >/dev/null 2>&1; then
             warn "python3 -m venv failed; trying to install python3-venv"
             if have sudo && [ "$(id -u)" -ne 0 ]; then
-                sudo apt-get update -qq && sudo apt-get install -y -qq python3-venv || true
+                sudo apt-get update -qq || true
+                sudo apt-get install -y -qq python3-venv || true
             fi
             if ! "$PYTHON" -m venv "$venv" >/dev/null 2>&1; then
                 warn "Falling back to the system Python (dependencies may conflict)."
